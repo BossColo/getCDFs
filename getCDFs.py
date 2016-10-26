@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[66]:
+# In[2]:
 
 def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
@@ -10,7 +10,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
     
     import sys
     import requests
-    from os.path import isfile
+    from os.path import isfile, sep
     from os import remove, listdir, stat, makedirs
     from fnmatch import filter
     from bs4 import BeautifulSoup
@@ -23,7 +23,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         config.read('getCDFsConfig.ini')
         root = config.get('Directories', 'root')
     else:
-        root = input('Please input a root directory for your cdf files:')+'\\'
+        root = input('Please input a root directory for your cdf files:')+sep
         config['Directories'] = {'root':root}
         with open('getCDFsConfig.ini', 'w') as configfile:
             config.write(configfile)
@@ -56,7 +56,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getTOFxE():
         url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxE'+species+'/'+datetime.strftime('%Y')+'/'
-        destination = root+craft+'\\TOFxE'+species+'\\'
+        destination = root+craft+sep+'TOFxE'+species+sep
         try:
             stat(destination)
         except:
@@ -97,7 +97,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
 
     def getTOFxPH():
         url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxPH'+species+PH+'/'+datetime.strftime('%Y')+'/'
-        destination = root+craft+'\\TOFxPH'+species+PH+'\\'
+        destination = root+craft+sep+'TOFxPH'+species+PH+sep
         try:
             stat(destination)
         except:
@@ -138,7 +138,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getHOPE():
         url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level3/PA/'
-        destination = root+craft+'\\HOPE\\'
+        destination = root+craft+sep+'HOPE\\'
         try:
             stat(destination)
         except:
@@ -175,7 +175,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L3/'+datetime.strftime('%Y/%m/%d/')
-        destination = root+craft+'\\EMFISIS\\'
+        destination = root+craft+sep+'EMFISIS\\'
         try:
             stat(destination)
         except:
@@ -245,7 +245,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
 
 def changeRoot():
     from configparser import ConfigParser
-    root = input('Please input a root directory for your cdf files:')+'\\'
+    root = input('Please input a root directory for your cdf files:')+sep
     
     config = ConfigParser()
     config['Directories'] = {'root':root}
