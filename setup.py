@@ -7,7 +7,7 @@ setup(
   author = 'Ross Cohen',
   author_email = 'rjc55@njit.edu',
   url = 'https://github.com/BossColo/getCDFs',
-  download_url = 'https://github.com/BossColo/getCDFs/tarball/1.0',
+  download_url = 'https://github.com/BossColo/getCDFs/tarball/1.1',
   keywords = ['Python', 'spacepy', 'RBSP'],
   classifiers = [],
 )
