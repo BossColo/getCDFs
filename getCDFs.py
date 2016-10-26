@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[15]:
+# In[28]:
 
 def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
@@ -56,7 +56,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getTOFxE():
         url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxE'+species+'/'+datetime.strftime('%Y')+'/'
-        destination = root+craft+sep+'TOFxE'+species+sep
+        destination = root+sep+craft+sep+'TOFxE'+species+sep
         try:
             stat(destination)
         except:
@@ -74,7 +74,6 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             return
         file = 'http://rbspice'+craft.lower()+'.ftecs.com' + fileList[-1]
         fname = file[file.rfind('/')+1:]
-        return fname
         fnameNoVer = fname[:fname.rfind('v')+1]
         prevFile = filter(listdir(destination), fnameNoVer+'*')
         if prevFile:
@@ -98,7 +97,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
 
     def getTOFxPH():
         url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxPH'+species+PH+'/'+datetime.strftime('%Y')+'/'
-        destination = root+craft+sep+'TOFxPH'+species+PH+sep
+        destination = root+sep+craft+sep+'TOFxPH'+species+PH+sep
         try:
             stat(destination)
         except:
@@ -139,7 +138,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getHOPE():
         url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level3/PA/'
-        destination = root+craft+sep+'HOPE'+sep
+        destination = root+sep+craft+sep+'HOPE'+sep
         try:
             stat(destination)
         except:
@@ -176,7 +175,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L3/'+datetime.strftime('%Y/%m/%d/')
-        destination = root+craft+sep+'EMFISIS'+sep
+        destination = root+sep+craft+sep+'EMFISIS'+sep
         try:
             stat(destination)
         except:
@@ -253,9 +252,4 @@ def changeRoot():
     config['Directories'] = {'root':root}
     with open('getCDFsConfig.ini', 'w') as configfile:
         config.write(configfile)
-
-
-# In[ ]:
-
-
 
