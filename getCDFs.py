@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[14]:
 
 def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
@@ -10,7 +10,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
     
     import sys
     import requests
-    from os.path import isfile, sep
+    from os.path import isfile, sep, normpath
     from os import remove, listdir, stat, makedirs
     from fnmatch import filter
     from bs4 import BeautifulSoup
@@ -23,7 +23,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         config.read('getCDFsConfig.ini')
         root = config.get('Directories', 'root')
     else:
-        root = input('Please input a root directory for your cdf files:')+sep
+        root = normpath(input('Please input a root directory for your cdf files:'))
         config['Directories'] = {'root':root}
         with open('getCDFsConfig.ini', 'w') as configfile:
             config.write(configfile)
@@ -74,6 +74,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             return
         file = 'http://rbspice'+craft.lower()+'.ftecs.com' + fileList[-1]
         fname = file[file.rfind('/')+1:]
+        return fname
         fnameNoVer = fname[:fname.rfind('v')+1]
         prevFile = filter(listdir(destination), fnameNoVer+'*')
         if prevFile:
@@ -138,7 +139,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getHOPE():
         url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level3/PA/'
-        destination = root+craft+sep+'HOPE\\'
+        destination = root+craft+sep+'HOPE'+sep
         try:
             stat(destination)
         except:
@@ -175,7 +176,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
         
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L3/'+datetime.strftime('%Y/%m/%d/')
-        destination = root+craft+sep+'EMFISIS\\'
+        destination = root+craft+sep+'EMFISIS'+sep
         try:
             stat(destination)
         except:
@@ -245,7 +246,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
 
 def changeRoot():
     from configparser import ConfigParser
-    root = input('Please input a root directory for your cdf files:')+sep
+    root = normpath(input('Please input a root directory for your cdf files:'))
     
     config = ConfigParser()
     config['Directories'] = {'root':root}
