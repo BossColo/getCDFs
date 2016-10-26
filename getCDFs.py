@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[14]:
+# In[15]:
 
 def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
             all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
@@ -246,6 +246,7 @@ def getCDFs(datetime, craft, species, PH='LEHT', EMF='1sec-sm',
 
 def changeRoot():
     from configparser import ConfigParser
+    from os.path import normpath
     root = normpath(input('Please input a root directory for your cdf files:'))
     
     config = ConfigParser()
