@@ -1,16 +1,15 @@
-
-# coding: utf-8
-
-# In[3]:
-
-def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
+def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMlevel='3', PH='LEHT', EMF='1sec-sm', check=True,
             all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
     '''
     getCDFs(getCDFs(datetime, string, string, **kw):
 
     date: Python datetime object containing the date that you want cdfs for.
-    craft: character: 'A' or 'B'.
-    species: character: 'H', 'He', or 'O'.
+    craft: character - 'A' or 'B'.
+    species: character - 'H', 'He', or 'O'.
+    RBlevel: string - RBSPICE data level; '3PAP', '3', '2', '1', or '0'
+    Hlevel: string - HOPE data level; '3', or '2'
+    Hproduct: string - If using, HOPE level 3 data, which product; 'PA' or 'MOM'
+    EMlevel: string - EMFISIS data level; '4', '3', or '2'
     PH: string describing which Time of Flight by Pulse Height product you want: 'LEHT'(Low Energy, High Time resolution) or 'HELT'(High Energy, Low Time resolution).
     EMF: string describing which EMFISIS product you want: ('1sec', '4sec', or 'hires')+'-'+('gei', 'geo', 'gse', 'gsm', or 'sm').
     check: When True, it will query the server for updated versions, if it is False, then the server will not be queried at all. If you don't have the file on your computer, it will not be downloaded. Set this keyword to False if you do not have internet access.
@@ -19,17 +18,96 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
     Returns: Python dictionary containing spacepy cdf objects. Keys are 'TOFxE', 'TOFxPH', 'HOPE', and 'EMFISIS'
     '''
     
-    cdfs = {}
-    
     import sys
     import requests
-    from os.path import isfile, sep, normpath
+    from os.path import isfile, join, normpath
     from os import remove, listdir, stat, makedirs
     from fnmatch import filter
     from bs4 import BeautifulSoup
     from urllib.request import urlretrieve
     import spacepy.pycdf as cdf
     from configparser import ConfigParser
+    from datetime import datetime
+    
+    if not (type(date) is datetime):
+        raise ValueError('Invalid date format, use datetime')
+        
+    if not (type(craft) is str):
+        raise ValueError('Invalid craft input, use string')
+    else:
+        craft = craft.upper()
+        
+    if not craft in ['A', 'B']:
+        raise ValueError('Invalid craft input, \'A\' or \'B\'')
+        
+    if not (type(species) is str):
+        raise ValueError('Invalid species input, use string')
+    else:
+        species = species.capitalize()
+        
+    if not species in ['H', 'He', 'O']:
+        raise ValueError('Invalid species input, \'H\', \'He\', or \'O\'')
+        
+    if not (type(RBlevel) is str):
+        raise ValueError('Invalid RBlevel input, use string')
+    else:
+        RBlevel = RBlevel.upper()
+        
+    if not RBlevel in ['3PAP', '3', '2', '1', '0']:
+        raise ValueError('Invalid RBlevel input, \'3PAP\', \'3\', \'2\', \'1\', or \'0\'')
+        
+    if not Hlevel in ['3', '2']:
+        raise ValueError('Invalid Hlevel input, \'3\', or \'2\'')
+        
+    if not (type(Hproduct) is str):
+        raise ValueError('Invalid Hproduct input, use string')
+    else:
+        Hproduct = Hproduct.upper()
+        
+    if not Hproduct in ['PA', 'MOM']:
+        raise ValueError('Invalid Hproduct input, \'PA\', or \'MOM\'')
+        
+    if not EMlevel in ['4', '3', '2']:
+        raise ValueError('Invalid RBlevel input, \'4\', \'3\', or \'2\'')
+        
+    if not (type(PH) is str):
+        raise ValueError('Invalid PH input, use string')
+    else:
+        PH = PH.upper()
+        
+    if not PH in ['LEHT', 'HELT']:
+        raise ValueError('Invalid RBlevel input, \'LEHT\', or \'HELT\'')
+        
+    if not (type(EMF) is str):
+        raise ValueError('Invalid EMF input, use string')
+    else:
+        EMF = EMF.lower()
+        
+    if not EMF in [a+'-'+b for a in ['1sec', '4sec', 'hires'] for b in ['gei', 'geo', 'gse', 'gsm', 'sm']]:
+        raise ValueError('Invalid EMF input, \'1sec\', \'4sec\', or \'hires\'+'+
+                         '\'-\'+\'gei\', \'geo\', \'gse\', \'gsm\', or \'sm\'')
+
+    if not (type(check) is bool):
+        raise ValueError('Invalid check input, use boolean')
+
+    if not (type(all) is bool):
+        raise ValueError('Invalid all input, use boolean')
+
+    if not (type(TOFxE) is bool):
+        raise ValueError('Invalid TOFxE input, use boolean')
+
+    if not (type(TOFxPH) is bool):
+        raise ValueError('Invalid TOFxPH input, use boolean')
+
+    if not (type(HOPE) is bool):
+        raise ValueError('Invalid HOPE input, use boolean')
+
+    if not (type(EMFISIS) is bool):
+        raise ValueError('Invalid EMFISIS input, use boolean')
+        
+        
+        
+    cdfs = {}
     
     config = ConfigParser()
     if isfile('getCDFsConfig.ini'):
@@ -68,8 +146,8 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
         EMFISIS = True
         
     def getTOFxE():
-        url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxE'+species+'/'+date.strftime('%Y')+'/'
-        destination = root+sep+craft+sep+'TOFxE'+species+sep
+        url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_'+RBlevel+'/TOFxE'+species+'/'+date.strftime('%Y')+'/'
+        destination = join(root, craft, 'TOFxE'+species, 'L'+RBlevel)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -77,7 +155,7 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
                 return
             else:
                 print('Loading TOFxE...')
-                return cdf.CDF(destination+file[0])
+                return cdf.CDF(join(destination, file[0]))
         try:
             stat(destination)
         except:
@@ -105,20 +183,20 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
             prevVer = 0
         if ver == prevVer:
             print('Loading TOFxE...')
-            return cdf.CDF(destination+fname)
+            return cdf.CDF(join(destination, fname))
         else:
             if prevVer != 0:
                 print('Updating TOFxE...')
             else:
                 print('Downloading TOFxE...')
-            newCDF = cdf.CDF(urlretrieve(file, destination+fname, reporthook)[0])
+            newCDF = cdf.CDF(urlretrieve(file, join(destination, fname), reporthook)[0])
             if prevVer != 0:
-                remove(destination+prevFile[0])
+                remove(join(destination, prevFile[0]))
             return newCDF
 
     def getTOFxPH():
-        url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_3PAP/TOFxPH'+species+PH+'/'+date.strftime('%Y')+'/'
-        destination = root+sep+craft+sep+'TOFxPH'+species+PH+sep
+        url = 'http://rbspice'+craft.lower()+'.ftecs.com/Level_'+RBlevel+'/TOFxPH'+species+PH+'/'+date.strftime('%Y')+'/'
+        destination = join(root, craft, 'TOFxPH'+species, 'L'+RBlevel+'-'+PH)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -126,7 +204,7 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
                 return
             else:
                 print('Loading TOFxPH...')
-                return cdf.CDF(destination+file[0])
+                return cdf.CDF(join(destination, file[0]))
         try:
             stat(destination)
         except:
@@ -154,20 +232,22 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
             prevVer = 0
         if ver == prevVer:
             print('Loading TOFxPH...')
-            return cdf.CDF(destination+fname)
+            return cdf.CDF(join(destination, fname))
         else:
             if prevVer != 0:
                 print('Updating TOFxPH...')
             else:
                 print('Downloading TOFxPH...')
-            newCDF = cdf.CDF(urlretrieve(file, destination+fname, reporthook)[0])
+            newCDF = cdf.CDF(urlretrieve(file, join(destination, fname), reporthook)[0])
             if prevVer != 0:
-                remove(destination+prevFile[0])
+                remove(join(destination, prevFile[0]))
             return newCDF
         
     def getHOPE():
-        url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level3/PA/'
-        destination = root+sep+craft+sep+'HOPE'+sep
+        url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level'+Hlevel
+        if Hlevel == '3':
+            url = url+'/'+Hproduct+'/'
+        destination = join(root, craft, 'HOPE', 'L'+Hlevel+Hproduct)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -175,7 +255,7 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
                 return
             else:
                 print('Loading HOPE...')
-                return cdf.CDF(destination+file[0])
+                return cdf.CDF(join(destination, file[0]))
         try:
             stat(destination)
         except:
@@ -199,20 +279,20 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
             prevVer = 0
         if ver == prevVer:
             print('Loading HOPE...')
-            return cdf.CDF(destination+fname)
+            return cdf.CDF(join(destination, fname))
         else:
             if prevVer != 0:
                 print('Updating HOPE...')
             else:
                 print('Downloading HOPE...')
-            newCDF = cdf.CDF(urlretrieve(file, destination+fname, reporthook)[0])
+            newCDF = cdf.CDF(urlretrieve(file, join(destination, fname), reporthook)[0])
             if prevVer != 0:
-                remove(destination+prevFile[0])
+                remove(join(destination, prevFile[0]))
             return newCDF
         
     def getEMFISIS():
-        url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L3/'+date.strftime('%Y/%m/%d/')
-        destination = root+sep+craft+sep+'EMFISIS'+sep
+        url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L'+EMlevel+'/'+date.strftime('%Y/%m/%d/')
+        destination = join(root, craft, 'EMFISIS', 'L'+EMlevel)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -220,7 +300,7 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
                 return
             else:
                 print('Loading EMFISIS...')
-                return cdf.CDF(destination+file[0])
+                return cdf.CDF(join(destination, file[0]))
         try:
             stat(destination)
         except:
@@ -247,15 +327,15 @@ def getCDFs(date, craft, species, PH='LEHT', EMF='1sec-sm', check=True,
             prevVer = 0
         if ver == prevVer:
             print('Loading EMFISIS...')
-            return cdf.CDF(destination+fname)
+            return cdf.CDF(join(destination, fname))
         else:
             if prevVer != 0:
                 print('Updating EMFISIS...')
             else:
                 print('Downloading EMFISIS...')
-            newCDF = cdf.CDF(urlretrieve(file, destination+fname, reporthook)[0])
+            newCDF = cdf.CDF(urlretrieve(file, join(destination, fname), reporthook)[0])
             if prevVer != 0:
-                remove(destination+prevFile[0])
+                remove(join(destination, prevFile[0]))
             return newCDF
                 
     if (TOFxE==True):
@@ -300,9 +380,6 @@ def changeRoot():
     config['Directories'] = {'root':root}
     with open('getCDFsConfig.ini', 'w') as configfile:
         config.write(configfile)
-
-
-# In[ ]:
 
 
 
