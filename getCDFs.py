@@ -1,5 +1,10 @@
-def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMlevel='3', PH='LEHT', EMF='1sec-sm', check=True,
-            all=True, TOFxE=False, TOFxPH=False, HOPE=False, EMFISIS=False):
+
+# coding: utf-8
+
+# In[9]:
+
+def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='LEHT', EMF='1sec-sm',
+            check=True, all=True, TOFxE=False, TOFxPH=False, HOPE=False, MagEIS=False, EMFISIS=False):
     '''
     getCDFs(getCDFs(datetime, string, string, **kw):
 
@@ -9,6 +14,7 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
     RBlevel: string - RBSPICE data level; '3PAP', '3', '2', '1', or '0'
     Hlevel: string - HOPE data level; '3', or '2'
     Hproduct: string - If using, HOPE level 3 data, which product; 'PA' or 'MOM'
+    Maglevel: string - MagEIS data level; '3', or '2'
     EMlevel: string - EMFISIS data level; '4', '3', or '2'
     PH: string describing which Time of Flight by Pulse Height product you want: 'LEHT'(Low Energy, High Time resolution) or 'HELT'(High Energy, Low Time resolution).
     EMF: string describing which EMFISIS product you want: ('1sec', '4sec', or 'hires')+'-'+('gei', 'geo', 'gse', 'gsm', or 'sm').
@@ -67,6 +73,9 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
     if not Hproduct in ['PA', 'MOM']:
         raise ValueError('Invalid Hproduct input, \'PA\', or \'MOM\'')
         
+    if not Maglevel in ['3', '2']:
+        raise ValueError('Invalid Maglevel input, \'3\', or \'2\'')
+        
     if not EMlevel in ['4', '3', '2']:
         raise ValueError('Invalid RBlevel input, \'4\', \'3\', or \'2\'')
         
@@ -101,6 +110,9 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
 
     if not (type(HOPE) is bool):
         raise ValueError('Invalid HOPE input, use boolean')
+        
+    if not (type(MagEIS) is bool):
+        raise ValueError('Invalid MagEIS input, use boolean')
 
     if not (type(EMFISIS) is bool):
         raise ValueError('Invalid EMFISIS input, use boolean')
@@ -135,7 +147,7 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
         print('There is no He data product for TOFxPH')
         return
     
-    if (TOFxE==True or TOFxPH==True or HOPE==True or EMFISIS==True):
+    if (TOFxE==True or TOFxPH==True or HOPE==True or MagEIS==True or EMFISIS==True):
         all = False
         
     if (all==True):
@@ -143,6 +155,7 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
         if species != 'He':
             TOFxPH = True
         HOPE = True
+        MagEIS = True
         EMFISIS = True
         
     def getTOFxE():
@@ -290,6 +303,51 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
                 remove(join(destination, prevFile[0]))
             return newCDF
         
+    def getMagEIS():
+        url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/mageis/level'+Hlevel+'/'
+        destination = join(root, craft, 'MagEIS', 'L'+Maglevel)
+        if not check:
+            file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
+            if not file:
+                print('No MagEIS file')
+                return
+            else:
+                print('Loading MagEIS...')
+                return cdf.CDF(join(destination, file[0]))
+        try:
+            stat(destination)
+        except:
+            makedirs(destination, exist_ok=True)
+        page = requests.get(url).text
+        soup = BeautifulSoup(page, 'html.parser')
+        files = [node.get('href') for node in soup.find_all('a') if node.get('href').endswith('.cdf')]
+        fileList = filter(files, '*'+date.strftime('%Y%m%d')+'*')
+        if not fileList:
+            print('Date does not exist for MagEIS '+craft)
+            return
+        file = url + fileList[-1]
+        fname = file[file.rfind('/')+1:]
+        fnameNoVer = fname[:fname.rfind('v')+1]
+        prevFile = filter(listdir(destination), fnameNoVer+'*')
+        if prevFile:
+            ver = fname[fname.rfind('v')+1:fname.rfind('.')]
+            prevVer = prevFile[0][prevFile[0].rfind('v')+1:prevFile[0].rfind('.')]
+        else:
+            ver = 1
+            prevVer = 0
+        if ver == prevVer:
+            print('Loading MagEIS...')
+            return cdf.CDF(join(destination, fname))
+        else:
+            if prevVer != 0:
+                print('Updating MagEIS...')
+            else:
+                print('Downloading MagEIS...')
+            newCDF = cdf.CDF(urlretrieve(file, join(destination, fname), reporthook)[0])
+            if prevVer != 0:
+                remove(join(destination, prevFile[0]))
+            return newCDF
+        
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L'+EMlevel+'/'+date.strftime('%Y/%m/%d/')
         destination = join(root, craft, 'EMFISIS', 'L'+EMlevel)
@@ -359,6 +417,13 @@ def getCDFs(date, craft, species, RBlevel='3PAP', Hlevel='3', Hproduct='PA', EMl
     else:
         cdfs['HOPE'] = None
         
+    if (MagEIS==True):
+        cdfs['MagEIS'] = getMagEIS()
+        if (cdfs['MagEIS'] != None):
+            sys.stderr.write('Loaded MagEIS\n')
+    else:
+        cdfs['MagEIS'] = None
+        
     if (EMFISIS==True):
         cdfs['EMFISIS'] = getEMFISIS()
         if (cdfs['EMFISIS'] != None):
@@ -380,6 +445,9 @@ def changeRoot():
     config['Directories'] = {'root':root}
     with open('getCDFsConfig.ini', 'w') as configfile:
         config.write(configfile)
+
+
+# In[ ]:
 
 
 
