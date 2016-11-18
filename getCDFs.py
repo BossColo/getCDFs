@@ -116,11 +116,11 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         
     cdfs = {}
     
-	if getenv('PYTHONPATH'):
+    if getenv('PYTHONPATH'):
         localDir = getenv('PYTHONPATH', '')
     else:
         localDir = getenv('LOCALAPPDATA', '')
-    
+        
     config = ConfigParser()
     if isfile(join(localDir, 'getCDFsConfig.ini')):
         config.read(join(localDir, 'getCDFsConfig.ini'))
@@ -445,6 +445,7 @@ def changeRoot():
         localDir = getenv('PYTHONPATH', '')
     else:
         localDir = getenv('LOCALAPPDATA', '')
+        
     root = normpath(input('Please input a root directory for your cdf files:'))
     
     config = ConfigParser()
