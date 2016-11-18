@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[9]:
-
 def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='LEHT', EMF='1sec-sm',
             check=True, all=True, TOFxE=False, TOFxPH=False, HOPE=False, MagEIS=False, EMFISIS=False):
     '''
@@ -27,7 +22,7 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     import sys
     import requests
     from os.path import isfile, join, normpath
-    from os import remove, listdir, stat, makedirs
+    from os import remove, listdir, stat, makedirs, getenv
     from fnmatch import filter
     from bs4 import BeautifulSoup
     from urllib.request import urlretrieve
@@ -121,14 +116,19 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         
     cdfs = {}
     
+	if getenv('PYTHONPATH'):
+        localDir = getenv('PYTHONPATH', '')
+    else:
+        localDir = getenv('LOCALAPPDATA', '')
+    
     config = ConfigParser()
-    if isfile('getCDFsConfig.ini'):
-        config.read('getCDFsConfig.ini')
+    if isfile(join(localDir, 'getCDFsConfig.ini')):
+        config.read(join(localDir, 'getCDFsConfig.ini'))
         root = config.get('Directories', 'root')
     else:
         root = normpath(input('Please input a root directory for your cdf files:'))
         config['Directories'] = {'root':root}
-        with open('getCDFsConfig.ini', 'w') as configfile:
+        with open(join(localDir,'getCDFsConfig.ini'), 'w') as configfile:
             config.write(configfile)
     
     def reporthook(blocknum, blocksize, totalsize):
@@ -438,16 +438,19 @@ def changeRoot():
     Running this will query you for a new root folder, which will be stored in your config file.
     '''
     from configparser import ConfigParser
-    from os.path import normpath
+    from os.path import normpath, join
+    from os import getenv
+    
+    if getenv('PYTHONPATH'):
+        localDir = getenv('PYTHONPATH', '')
+    else:
+        localDir = getenv('LOCALAPPDATA', '')
     root = normpath(input('Please input a root directory for your cdf files:'))
     
     config = ConfigParser()
     config['Directories'] = {'root':root}
-    with open('getCDFsConfig.ini', 'w') as configfile:
+    with open(join(localDir, 'getCDFsConfig.ini'), 'w') as configfile:
         config.write(configfile)
-
-
-# In[ ]:
 
 
 
