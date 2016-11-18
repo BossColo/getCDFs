@@ -1,4 +1,4 @@
-def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='LEHT', EMF='1sec-sm',
+def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='HELT', EMF='1sec-sm',
             check=True, all=True, TOFxE=False, TOFxPH=False, HOPE=False, MagEIS=False, EMFISIS=False):
     '''
     getCDFs(getCDFs(datetime, string, string, **kw):
