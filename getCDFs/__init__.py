@@ -430,13 +430,16 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
 
     return cdfs
 
-def changeRoot():
+def changeRoot(newRoot=''):
     '''
     Running this will query you for a new root folder, which will be stored in your config file.
     '''
 
     global root
-    root = normpath(input('Please input a root directory for your cdf files:'))
+    if newRoot:
+        root = newRoot
+    else:
+        root = normpath(input('Please input a root directory for your cdf files:'))
 
     config['Directories'] = {'root':root}
     with open(configData, 'w') as configfile:
