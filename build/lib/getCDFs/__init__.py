@@ -1,3 +1,26 @@
+import sys
+import requests
+from os.path import isfile, join, normpath
+from os import remove, listdir, stat, makedirs
+from fnmatch import filter
+from bs4 import BeautifulSoup
+from urllib.request import urlretrieve
+import spacepy.pycdf as cdf
+from configparser import ConfigParser
+from datetime import datetime
+import pkgutil
+
+config = ConfigParser()
+configData = pkgutil.get_data('getCDFs', 'getCDFsConfig.ini')
+config.read(configData)
+root = config.get('Directories', 'root')
+
+if not root:
+	root = normpath(input('Please input a root directory for your cdf files:'))
+	config['Directories'] = {'root':root}
+	with open(configData, 'w') as configfile:
+		config.write(configfile)
+	
 def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='HELT', EMF='1sec-sm',
             check=True, all=True, TOFxE=False, TOFxPH=False, HOPE=False, MagEIS=False, EMFISIS=False):
     '''
@@ -16,19 +39,8 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     check: When True, it will query the server for updated versions, if it is False, then the server will not be queried at all. If you don't have the file on your computer, it will not be downloaded. Set this keyword to False if you do not have internet access.
     The last five keywords describe which data product you want, all is default, but if you set any one or more of them to True, then you will only get what you set to True.
 
-    Returns: Python dictionary containing spacepy cdf objects. Keys are 'TOFxE', 'TOFxPH', 'HOPE', and 'EMFISIS'
+    Returns: Python dictionary containing spacepy cdf objects. Keys are 'TOFxE', 'TOFxPH', 'HOPE', 'MagEIS', and 'EMFISIS'
     '''
-    
-    import sys
-    import requests
-    from os.path import isfile, join, normpath
-    from os import remove, listdir, stat, makedirs, getenv
-    from fnmatch import filter
-    from bs4 import BeautifulSoup
-    from urllib.request import urlretrieve
-    import spacepy.pycdf as cdf
-    from configparser import ConfigParser
-    from datetime import datetime
     
     if not (type(date) is datetime):
         raise ValueError('Invalid date format, use datetime')
@@ -115,21 +127,6 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         
         
     cdfs = {}
-    
-    if getenv('PYTHONPATH'):
-        localDir = getenv('PYTHONPATH', '')
-    else:
-        localDir = getenv('LOCALAPPDATA', '')
-        
-    config = ConfigParser()
-    if isfile(join(localDir, 'getCDFsConfig.ini')):
-        config.read(join(localDir, 'getCDFsConfig.ini'))
-        root = config.get('Directories', 'root')
-    else:
-        root = normpath(input('Please input a root directory for your cdf files:'))
-        config['Directories'] = {'root':root}
-        with open(join(localDir,'getCDFsConfig.ini'), 'w') as configfile:
-            config.write(configfile)
     
     def reporthook(blocknum, blocksize, totalsize):
         readsofar = blocknum * blocksize
@@ -437,20 +434,11 @@ def changeRoot():
     '''
     Running this will query you for a new root folder, which will be stored in your config file.
     '''
-    from configparser import ConfigParser
-    from os.path import normpath, join
-    from os import getenv
-    
-    if getenv('PYTHONPATH'):
-        localDir = getenv('PYTHONPATH', '')
-    else:
-        localDir = getenv('LOCALAPPDATA', '')
         
     root = normpath(input('Please input a root directory for your cdf files:'))
     
-    config = ConfigParser()
     config['Directories'] = {'root':root}
-    with open(join(localDir, 'getCDFsConfig.ini'), 'w') as configfile:
+    with open(configData, 'w') as configfile:
         config.write(configfile)
 
 
