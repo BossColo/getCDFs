@@ -348,7 +348,6 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L'+EMlevel+'/'+date.strftime('%Y/%m/%d/')
         destination = join(root, craft, 'EMFISIS', 'L'+EMlevel)
-        print(destination)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
