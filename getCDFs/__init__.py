@@ -348,6 +348,7 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     def getEMFISIS():
         url = 'http://emfisis.physics.uiowa.edu/Flight/RBSP-'+craft+'/L'+EMlevel+'/'+date.strftime('%Y/%m/%d/')
         destination = join(root, craft, 'EMFISIS', 'L'+EMlevel)
+        print(destination)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -370,7 +371,11 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         page = request.text
         soup = BeautifulSoup(page, 'html.parser')
         files = [node.get('href') for node in soup.find_all('a') if node.get('href').endswith('.cdf')]
-        file = url + filter(files, '*'+EMF+'*'+date.strftime('%Y%m%d')+'*')[-1]
+        try:            
+            file = url + filter(files, '*'+EMF+'*'+date.strftime('%Y%m%d')+'*')[-1]
+        except:
+            print('Problem with server for TOFxE'+species+' '+craft)
+            return
         fname = file[file.rfind('/')+1:]
         fnameNoVer = fname[:fname.rfind('v')+1]
         prevFile = filter(listdir(destination), fnameNoVer+'*')
