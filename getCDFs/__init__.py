@@ -21,7 +21,7 @@ if not root:
     with open(configData, 'w') as configfile:
         config.write(configfile)
 
-def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA', Maglevel='3', EMlevel='3', PH='HELT', EMF='1sec-sm',
+def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='pitchangle', Maglevel='3', EMlevel='3', PH='HELT', EMF='1sec-sm',
             check=True, all=True, TOFxE=False, TOFxPH=False, HOPE=False, MagEIS=False, EMFISIS=False):
     '''
     getCDFs(getCDFs(datetime, string, string, **kw):
@@ -75,10 +75,10 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     if not (type(Hproduct) is str):
         raise ValueError('Invalid Hproduct input, use string')
     else:
-        Hproduct = Hproduct.upper()
+        Hproduct = Hproduct.lower()
 
-    if not Hproduct in ['PA', 'MOM']:
-        raise ValueError('Invalid Hproduct input, \'PA\', or \'MOM\'')
+    if not Hproduct in ['pitchangle', 'moments']:
+        raise ValueError('Invalid Hproduct input, \'pitchangle\', or \'moments\'')
 
     if not Maglevel in ['3', '2']:
         raise ValueError('Invalid Maglevel input, \'3\', or \'2\'')
@@ -102,6 +102,8 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
     if not EMF in [a+'-'+b for a in ['1sec', '4sec', 'hires'] for b in ['gei', 'geo', 'gse', 'gsm', 'sm']]:
         raise ValueError('Invalid EMF input, \'1sec\', \'4sec\', or \'hires\'+'+
                          '\'-\'+\'gei\', \'geo\', \'gse\', \'gsm\', or \'sm\'')
+                         
+    EMF = '' if EMlevel == '4' else EMF
 
     if not (type(check) is bool):
         raise ValueError('Invalid check input, use boolean')
@@ -257,7 +259,9 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         url = 'https://rbsp-ect.lanl.gov/data_pub/rbsp'+craft.lower()+'/hope/level'+Hlevel
         if Hlevel == '3':
             url = url+'/'+Hproduct+'/'
-        destination = join(root, craft, 'HOPE', 'L'+Hlevel+Hproduct)
+        url = url+'/'+date.strftime('%Y')+'/'
+        Hpro = 'PA' if Hproduct=='pitchangle' else 'MOM'
+        destination = join(root, craft, 'HOPE', 'L'+Hlevel+Hpro)
         if not check:
             file = filter(listdir(destination), '*'+date.strftime('%Y%m%d')+'*')
             if not file:
@@ -373,7 +377,7 @@ def getCDFs(date, craft, species='H', RBlevel='3PAP', Hlevel='3', Hproduct='PA',
         try:            
             file = url + filter(files, '*'+EMF+'*'+date.strftime('%Y%m%d')+'*')[-1]
         except:
-            print('Problem with server for TOFxE'+species+' '+craft)
+            print('Problem with EMFISIS server for TOFxE'+species+' '+craft)
             return
         fname = file[file.rfind('/')+1:]
         fnameNoVer = fname[:fname.rfind('v')+1]
